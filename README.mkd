@@ -1,0 +1,13 @@
+When the [Iris Data Set](http://archive.ics.uci.edu/ml/datasets/Iris) becomes too mainstream and you 
+want to hipsterize your toying of machine learning tools.
+
+**WARNING**: this is work-in-progress.
+
+# Intro
+
+Generates data to be used it in the evaluation of machine learning algorithms.
+
+Related work [@scott_evaluating_1999 ; @atzmueller_datagenerator_2006].
+
+# References
+

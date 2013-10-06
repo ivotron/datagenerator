@@ -1,0 +1,85 @@
+#!/usr/bin/python
+import sys
+import os
+from subprocess import call
+
+from datagenerator.generation import DataGenerator
+
+def main(argv=None):
+   #classifiers   = ['trees.J48']
+   #dataPoints    = ['10']
+   #distributions = ['uniform']
+   #parameters    = ['0.25,0.5,0.75']
+   #parameters    = ['1,0']
+   #bucketSizes   = ['1073741824']
+   ###########
+   classifiers   = ['trees.J48', 'bayes.NaiveBayes', 'functions.Logistic', 'lazy.IBk']
+   dataPoints    = ['10', '100', '1000']
+   distributions = ['uniform']
+   #parameters    = ['0.25', '0.5', '0.75', '0.25,0.5', '0.25,0.5,0.75']
+   parameters    = ['1,0', '1,1,1,1,0', '0,0,0,1,1,1,0,1,0,1']
+   #bucketSizes   = ['1073741824', '268435456', '33554432', '4194304']
+   bucketSizes   = ['268435456', '33554432', '4194304']
+               #     ^             ^             ^           ^
+ # intervals   #     4            16            128         1024
+
+   for points in dataPoints:
+      for dist in distributions:
+         for parameter in parameters:
+            for bucketSize in bucketSizes:
+               outFile = '/home/ivo/tmp/exp_' + points + "_" + dist + "_" + bucketSize + "_" + parameter + "_" + points
+               confFile = open('conf/temp.conf', 'w')
+
+               confFile.write('''\
+[global]
+
+data_points = ''' + points + '''\
+
+features = 1
+feature_1_type = int32
+feature_1_distribution = ''' + dist + '''\
+
+labels = 1
+label_1_type = binary(1)
+label_1_distribution = conditional
+label_1_parameter1 = rangeConditional
+label_1_parameter2 = '{ "instanceMembers": [1], "bucketSize": ''' + bucketSize + ''', "values": [''' + parameter + ''']}'
+
+output = arff
+output_file = ''' + outFile + '_training.arff')
+
+               confFile.close()
+               DataGenerator.generate('conf/temp.conf')
+               confFile = open('conf/temp.conf', 'w')
+
+               confFile.write('''\
+[global]
+
+data_points = ''' + points + '''\
+
+features = 1
+feature_1_type = int32
+feature_1_distribution = ''' + dist + '''\
+
+labels = 1
+label_1_type = binary(1)
+label_1_distribution = conditional
+label_1_parameter1 = rangeConditional
+label_1_parameter2 = '{ "instanceMembers": [1], "bucketSize": ''' + bucketSize + ''', "values": [''' + parameter + ''']}'
+
+output = arff
+output_file = ''' + outFile + '_test.arff')
+
+               confFile.close()
+               for classifier in classifiers:
+                  DataGenerator.generate('conf/temp.conf')
+                  # create the model
+                  os.system('java -cp /home/ivo/.opt/weka/weka.jar weka.classifiers.' + classifier + ' -t "' + outFile + '_training.arff" -d "' + outFile + '_' + classifier + '.model"')
+
+                  # run on test data
+                  os.system('java -cp /home/ivo/.opt/weka/weka.jar weka.classifiers.' + classifier + ' -T "' + outFile + '_test.arff" -l "' + outFile + '_' + classifier + '.model" -p 0 > "' + outFile + '_result_' + classifier + '.csv"')
+
+   return 0
+
+if __name__=="__main__":
+    sys.exit(main(sys.argv[1:]))

@@ -1,0 +1,27 @@
+#!/usr/bin/python
+import sys, argparse
+
+from datagenerator.generation import DataGenerator
+
+def main(argv=None):
+    if argv is None:
+        argv=sys.argv[1:]
+
+    p = argparse.ArgumentParser(
+          description="Data Generator for Machine Learning Techniques Testing")
+
+    helpStr ="""
+    Configuration file containing the data generation options ('ini' format). 
+    Check the 'conf/' folder for examples.
+    """
+    p.add_argument('conf', help=helpStr)
+
+    # Parse command line arguments
+    args = p.parse_args(argv)
+
+    DataGenerator.generate(args.conf)
+
+    return 0
+
+if __name__=="__main__":
+    sys.exit(main(sys.argv[1:]))
